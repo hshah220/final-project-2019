@@ -1,3 +1,6 @@
+//Hemil Mehul Shah
+//Final Project
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -6,13 +9,13 @@ using namespace std;
 
 bool debug = false;
 
-enum en_DIRS {NORTH, EAST, SOUTH, WEST};
-enum en_ROOMS {L, D1, D2, D3, D4, D5, A1, A2, A3, A4, A5, BC1, BC2, BC3, BC4, BC5, RR1, RR2, RR3, RR4, RR5, R1, R2,R3, R4, R5, C1, C2, C3, C4, C5 };
-//Enable 1 or more these verbs other than those already enabled (LOOK & OPEN)
-enum en_VERBS {GET, DROP, USE, OPEN, CLOSE, EXAMINE, INVENTORY, LOOK, /*added*/ EAT, DRINK};
-enum en_NOUNS {BAG, COFFEE, TICKET, PASSPORT, MONEY, PIZZA, PILLOW, WATER, DUFFEL, CLOTHES, LAPTOP, DOOR, BOOK, BAGEL, CANDY};
+int static total;
 
-static int limit;
+enum en_DIRS {NORTH, EAST, SOUTH, WEST};
+enum en_ROOMS {L, D1, D2, D3, D4, D5, A1, A2, A3, A4, A5, BC1, BC2, BC3, BC4, BC5, RR1, RR2, RR3, RR4, RR5, R1, R2,R3, R4, R5, C1, C2, C3, C4, C5, STORAGE };
+//Enable 1 or more these verbs other than those already enabled (LOOK & OPEN)
+enum en_VERBS {GET, DROP, USE, OPEN, CLOSE, EXAMINE, INVENTORY, LOOK, HELP, QUIT};
+enum en_NOUNS {BAG, COFFEE, TICKET, PASSPORT, MONEY, PIZZA, PILLOW, WATER, DUFFEL, CLOTHES, LAPTOP, DOOR, BOOK, BAGEL, CANDY};
 
 const int NONE = -1;
 const int DIRS = 4;
@@ -22,36 +25,58 @@ const int NOUNS = 15;
 
 class words
 {
+private:
+	int code;
 public:
 	words(int givenCode = 1, string givenWord = "LOOK")
 	{
-		code = givenCode;
+		setCode(givenCode);
 		word = givenWord;	
 	}
-	string word;
-	int code;
+	string word;				// noun inherits this
+	int getCode()
+	{
+		return code;
+	}
+	void setCode(int givenCode)
+	{
+		code = givenCode;
+	}
 	~words()
 	{
-
+		word.clear();
+		code = NONE;
 	}
 };
+
 class room
 {
-public:
+private:
 	string description;
-	int exits_to_room[DIRS];
 public:
-/*	string getDescription()
+	string detailDesc;
+	int exits_to_room[DIRS];
+	room(string givenDescription, string givenDetDesc, int north, int east, int south, int west)
 	{
-		
-	}*/
-	room(string givenDescription, int north, int east, int south, int west)
-	{
-		description = givenDescription;
+		setDescription(givenDescription);
+		detailDesc = givenDetDesc;
 		exits_to_room[NORTH] = north;
 		exits_to_room[EAST] = east;
 		exits_to_room[SOUTH] = south;
 		exits_to_room[WEST] = west;	
+		total++;
+	}
+	room(string givenDescription)
+	{
+		setDescription(givenDescription);
+	}
+	string getDescription()
+	{
+		return description;
+	}
+	void setDescription(string givenDescription)
+	{
+		description = givenDescription;
 	}
 	~room()
 	{
@@ -62,21 +87,30 @@ public:
 		exits_to_room[WEST] = NONE;
 	}
 };
-class noun
+
+class noun : public words
 {
+private:
+	int location;
 public:
 	noun( string givenWord = "NONE", int givenCode = NONE, string givenDescription = "LOADING", bool can_carry = NONE, int givenLocation = L)
 	{
 		word = givenWord;
 		code = givenCode;
 		description = givenDescription;
-		location = givenLocation;
+		setLocation(givenLocation);
 	}
-	string word;
 	string description;
 	int code;
-	int location;
 	bool can_carry;
+	int getLocation()
+	{
+		return location;
+	}
+	void setLocation(int givenLocation)
+	{
+		location = givenLocation;
+	}
 	~noun()
 	{
 		word = " ";
@@ -89,43 +123,53 @@ public:
 
 void set_rooms(vector<room> &rms)
 {
-	rms.push_back(room("lobby", D1, C1, A1, RR1));
+	if(total < 45)
+	{
+		rms.push_back(room("lobby", "The Centre of the airport", D1, C1, A1, RR1));
 	
-	rms.push_back(room("departure one", RR2, R3, L, D2));
-	rms.push_back(room("departure two", A2, D1, NONE, NONE));
-	rms.push_back(room("departure three", A5, C5, RR4, R1));
-	rms.push_back(room("departure four", C3, NONE, NONE, NONE));
-	rms.push_back(room("departure five", NONE, C4, NONE, NONE));
-	
-	rms.push_back(room("arrival one", L, BC1, RR3, R2));
-	rms.push_back(room("arrival two", BC2, NONE, D2, C2));
-	rms.push_back(room("arrival three", NONE, BC3, NONE, C5));
-	rms.push_back(room("arrival four", NONE, C3, NONE, BC4));
-	rms.push_back(room("arrival five", BC5, NONE, D3, R1));
+		rms.push_back(room("departure one", "Terminal where planes depart to India", RR2, R3, L, D2));
+		rms.push_back(room("departure two", "Terminal where planes depart to Tanzania", A2, D1, NONE, NONE));
+		rms.push_back(room("departure three", "Terminal where planes depart to Egypt", A5, C5, RR4, R1));
+		rms.push_back(room("departure four", "Terminal where planes depart to Dubai", C3, NONE, NONE, NONE));
+		rms.push_back(room("departure five", "Terminal where planes depart to Canada", NONE, C4, NONE, NONE));
+		
+		rms.push_back(room("arrival one", "Terminal where planes arrive from India", L, BC1, RR3, R2));
+		rms.push_back(room("arrival two", "Terminal where planes arrive from Tanzania", BC2, NONE, D2, C2));
+		rms.push_back(room("arrival three", "Terminal where planes arrive from Egypt", NONE, BC3, NONE, C5));
+		rms.push_back(room("arrival four", "Terminal where planes arrive from Dubai", NONE, C3, NONE, BC4));
+		rms.push_back(room("arrival five", "Terminal where planes arrive from Canada", BC5, NONE, D3, R1));
 
-	rms.push_back(room("baggage claim one", NONE, NONE, NONE, A1));
-	rms.push_back(room("baggage claim two", NONE, NONE, A2, NONE));
-	rms.push_back(room("baggage claim three", NONE, NONE, NONE, A3));
-	rms.push_back(room("baggage claim four", NONE, A4, NONE, NONE));
-	rms.push_back(room("baggage claim five", NONE, NONE, A5, NONE));
+		rms.push_back(room("baggage claim one", "Baggage carousels where bags India from can be found.", NONE, NONE, NONE, A1));
+		rms.push_back(room("baggage claim two", "Baggage carousels where bags Tanzania from can be found.", NONE, NONE, A2, NONE));
+		rms.push_back(room("baggage claim three", "Baggage carousels where bags Egypt from can be found.", NONE, NONE, NONE, A3));
+		rms.push_back(room("baggage claim four", "Baggage carousels where bags Dubai from can be found.", NONE, A4, NONE, NONE));
+		rms.push_back(room("baggage claim five", "Baggage carousels where bags Canada from can be found.", NONE, NONE, A5, NONE));
 
-	rms.push_back(room("rest room one", NONE, L, NONE, NONE));
-	rms.push_back(room("rest room two", NONE, NONE, D1, NONE));
-	rms.push_back(room("rest room three", A1, NONE, NONE, NONE));
-	rms.push_back(room("rest room four", D3, NONE, C3, NONE));
-	rms.push_back(room("rest room five", NONE, NONE, C2, NONE));
-	
-	rms.push_back(room("restaurant one", NONE, D3, NONE, C1));
-	rms.push_back(room("restaurant two", NONE, A1, NONE, C4));
-	rms.push_back(room("restaurant three", NONE, NONE, NONE, D1));
-	rms.push_back(room("restaurant four", NONE, C2, NONE, NONE));
-	rms.push_back(room("restaurant five", NONE, NONE, NONE, C3));
+		rms.push_back(room("rest room one", "Rest Room with shower.", NONE, L, NONE, NONE));
+		rms.push_back(room("rest room two", "Rest Room with swimming pool.", NONE, NONE, D1, NONE));
+		rms.push_back(room("rest room three", "Rest Room with hot tub.", A1, NONE, NONE, NONE));
+		rms.push_back(room("rest room four", "Rest Room with gold sinks.", D3, NONE, C3, NONE));
+		rms.push_back(room("rest room five", "Rest Room with diamond toilet seats.", NONE, NONE, C2, NONE));
+		
+		rms.push_back(room("Chipotle", "Famous for burrito bowls.", NONE, D3, NONE, C1));
+		rms.push_back(room("Dominos", "Famous for 7.99 Medium Pan Pizza.", NONE, A1, NONE, C4));
+		rms.push_back(room("Tup Tim Thai", "Famous for Thai food.", NONE, NONE, NONE, D1));
+		rms.push_back(room("Meddy's", "Famous for Mediterranean food", NONE, C2, NONE, NONE));
+		rms.push_back(room("Taco Bell", "Famous for Tacos.", NONE, NONE, NONE, C3));
 
-	rms.push_back(room("Cafe one", NONE, R1, NONE, L));
-	rms.push_back(room("Cafe two", RR5, A2, NONE, R4));
-	rms.push_back(room("Cafe three", RR4, R5, D4, A4));
-	rms.push_back(room("Cafe four", NONE, R2, NONE, D5));
-	rms.push_back(room("Cafe five", NONE, A3, NONE, D3));
+		rms.push_back(room("Starbucks", "Famous for different unique flavors.", NONE, R1, NONE, L));
+		rms.push_back(room("Dunkin Donuts", "Famous for Donuts and Coffee.", RR5, A2, NONE, R4));
+		rms.push_back(room("Krispy Kreme", "Famous for free fresh-made donuts.", RR4, R5, D4, A4));
+		rms.push_back(room("Kung-Fu Tea", "Famous for flavored Green Tea.", NONE, R2, NONE, D5));
+		rms.push_back(room("Scooter's Coffee", "Famous for hot chocolate.", NONE, A3, NONE, D3));
+
+		rms.push_back(room("Storage", "Used to store the inventory.", NONE, NONE, NONE, NONE));
+	}
+	else 
+	{
+		cout<<"Not today";
+		return ;
+	}
 }
 
 void set_directions(vector<words> &dir)
@@ -139,35 +183,35 @@ void set_directions(vector<words> &dir)
 void set_verbs(vector<words> &vbs)
 {
 	//enum en_VERBS {GET, DROP, USE, OPEN, CLOSE, EXAMINE, INVENTORY, LOOK, EAT, DRINK};
-	vbs.push_back(words(GET, "GET"));
+	vbs.push_back(words(GET, "GET")); //enabled
 	vbs.push_back(words(DROP, "DROP"));
 	vbs.push_back(words(USE, "USE"));
 	vbs.push_back(words(OPEN, "OPEN"));
 	vbs.push_back(words(CLOSE, "CLOSE"));
-	vbs.push_back(words(EXAMINE, "EXAMINE"));
+	vbs.push_back(words(EXAMINE, "EXAMINE")); //enabled
 	vbs.push_back(words(INVENTORY, "INVENTORY"));
-	vbs.push_back(words(LOOK, "LOOK"));
-	vbs.push_back(words(EAT, "EAT"));
-	vbs.push_back(words(DRINK, "DRINK"));
+	vbs.push_back(words(LOOK, "LOOK")); //original enabled
+	vbs.push_back(words(HELP, "HELP")); //new added and enabled
+	vbs.push_back(words(QUIT, "QUIT")); //new added and enabled
 }
 
 void set_nouns(vector<noun> &nns)
 {
 	//enum en_NOUNS {BAG, COFFEE, TICKET, PASSPORT, MONEY, PIZZA, PILLOW, WATER, DUFFEL, CLOTHES, LAPTOP, DOOR, BOOK, BAGEL, CANDY};
-	nns.push_back(noun("BAG", BAG, "A luggage bag", true, BC1));
-	nns.push_back(noun("COFFEE", COFFEE, "A mug of coffee", true, C1));
-	nns.push_back(noun("TICKET", TICKET, "A flight ticket", true, L));
-	nns.push_back(noun("PASSPORT", PASSPORT, "A passport", true, NONE));
+	nns.push_back(noun("BAG", BAG, "a luggage bag", true, BC1));
+	nns.push_back(noun("COFFEE", COFFEE, "a mug of coffee", true, C1));
+	nns.push_back(noun("TICKET", TICKET, "a flight ticket", true, L));
+	nns.push_back(noun("PASSPORT", PASSPORT, "a passport", true, NONE));
 	nns.push_back(noun("MONEY", MONEY, "Some money", true, NONE));
-	nns.push_back(noun("PIZZA", PIZZA, "A pizza", false, R1));
-	nns.push_back(noun("PILLOW", PILLOW, "A travel pillow", true, D1));
-	nns.push_back(noun("WATER", WATER, "A water bottle", true, R2));
-	nns.push_back(noun("DUFFEL", DUFFEL, "A duffel bag", true, BC2));
-	nns.push_back(noun("CLOTHES", CLOTHES, "A pair of clothes", true, RR1));
-	nns.push_back(noun("LAPTOP", LAPTOP, "A 13' Macbook", true, A1));
-	nns.push_back(noun("DOOR", DOOR, "A flight door", false, D4));
-	nns.push_back(noun("BOOK", BOOK, "A novel", true, C2));
-	nns.push_back(noun("BAGEL", BAGEL, "A bagel", true, C3));
+	nns.push_back(noun("PIZZA", PIZZA, "a pizza", false, R1));
+	nns.push_back(noun("PILLOW", PILLOW, "a travel pillow", true, D1));
+	nns.push_back(noun("WATER", WATER, "a water bottle", true, R2));
+	nns.push_back(noun("DUFFEL", DUFFEL, "a duffel bag", true, BC2));
+	nns.push_back(noun("CLOTHES", CLOTHES, "a pair of clothes", true, RR1));
+	nns.push_back(noun("LAPTOP", LAPTOP, "a 13' Macbook", true, A1));
+	nns.push_back(noun("DOOR", DOOR, "a flight door", false, D4));
+	nns.push_back(noun("BOOK", BOOK, "a novel", true, C2));
+	nns.push_back(noun("BAGEL", BAGEL, "a bagel", true, C3));
 	nns.push_back(noun("CANDY", CANDY, "Some candy", true, D2));
 }
 
@@ -240,15 +284,22 @@ void look_around(int loc, vector<room> &rms, vector<words> &dir, vector<noun> &n
 	{
 		cout<<"starting Look Around.\n";
 		cout << "loc # = " << loc << endl;
-		cout << "Just for testing rms[0].desc = " << rms[0].description << endl;
+		cout << "Just for testing rms[0].desc = " << rms[0].getDescription() << endl;
 	}
 	int i;
-	cout << "I am in a " << rms[loc].description << "." << endl;
+	cout << "I am in a " << rms[loc].getDescription() << "." << endl;
 	for(i = 0; i < DIRS; i++)
 	{
 		if(rms[loc].exits_to_room[i] != NONE)
 		{
-			cout << "There is an exit " << dir[i].word << " to a " << rms[rms[loc].exits_to_room[i]].description << "." << endl;
+			cout << "There is an exit " << dir[i].word << " to (a) " << rms[rms[loc].exits_to_room[i]].getDescription() << "." << endl;
+		}
+	}
+	for(i = 0; i < NOUNS; i++)
+	{
+		if(nns[i].getLocation() == loc)
+		{
+			cout << "I see " << nns[i].description << "." << endl;
 		}
 	}
 }
@@ -266,10 +317,10 @@ bool parser(int &loc, string wd1, string wd2, vector<words> &dir, vector<words> 
 	{
 		if(wd1 == dir[i].word)
 		{
-			if(rms[loc].exits_to_room[dir[i].code] != NONE)
+			if(rms[loc].exits_to_room[dir[i].getCode()] != NONE)
 			{
-				loc = rms[loc].exits_to_room[dir[i].code];
-				cout << "I am now in a " << rms[loc].description << "." << endl;
+				loc = rms[loc].exits_to_room[dir[i].getCode()];
+				cout << "I am now in (a) " << rms[loc].getDescription() << "." << endl;
 				return true;
 			}
 			else
@@ -285,7 +336,7 @@ bool parser(int &loc, string wd1, string wd2, vector<words> &dir, vector<words> 
 	{
 		if(wd1 == vbs[i].word)
 		{
-			VERB_ACTION = vbs[i].code;
+			VERB_ACTION = vbs[i].getCode();
 			break;
 		}
 	}
@@ -310,6 +361,91 @@ bool parser(int &loc, string wd1, string wd2, vector<words> &dir, vector<words> 
 	{
 		look_around(loc, rms, dir, nns);
 		return true;
+	}
+
+	if(VERB_ACTION == EXAMINE)
+	{
+		cout << rms[loc].detailDesc << endl;
+	}
+
+	//GET, DROP, USE, OPEN, CLOSE, EXAMINE, INVENTORY, LOOK, HELP, QUIT
+	if(VERB_ACTION == HELP)
+	{
+		cout << "You can do the following (if possible): \n";
+		cout << "LOOK -> to look around the room\n";
+		cout << "GET -> to get an item\n";
+		cout << "DROP -> to drop an item\n";
+		cout << "USE -> to use an item\n";
+		cout << "OPEN -> to open the door\n";
+		cout << "CLOSE -> to close the door\n";
+		cout << "EXAMINE -> to examine the room you are in\n";
+		cout << "INVENTORY -> to display your inventory\n";
+		cout << "QUIT -> to quit the game\n";
+		cout << "NORTH -> to exit north of a room\n";
+		cout << "EAST -> to exit east of a room\n";
+		cout << "SOUTH -> to exit south of a room\n";
+		cout << "WEST -> to exit west of a room\n";
+		cout << "HELP -> to re-display these command options\n";
+	}
+
+	if(VERB_ACTION == QUIT)
+	{
+		cout << "I am glad that you decided to play this game!\n";
+		return 0;
+	}
+
+	//noun( string givenWord = "NONE", int givenCode = NONE, string givenDescription = "LOADING", bool can_carry = NONE, int givenLocation = L)
+	if(VERB_ACTION == GET)
+	{
+		for(i = 0; i < NOUNS; i++)
+		{
+			if(nns[i].getLocation() == loc)
+			{
+				cout << "You have collected " << nns[i].description << "." << endl;
+				nns[i].setLocation(STORAGE); 
+			}
+		}
+	}
+
+	if(VERB_ACTION == DROP)
+	{
+		for(i = 0; i < NOUNS; i++)
+	 	{
+			if(wd2 == nns[i].word)
+			{
+				if(nns[i].getLocation() == STORAGE)
+				{
+					cout<<"You have dropped " << nns[i].description << endl;
+					nns[i].setLocation(loc);
+				}
+			}	 		
+		}
+	}
+
+	if(VERB_ACTION == USE)
+	{
+		for(i = 0; i < NOUNS; i++)
+	 	{
+			if(wd2 == nns[i].word)
+			{
+				if(nns[i].getLocation() == STORAGE)
+				{
+					cout<<"You have used " << nns[i].description << endl;
+					nns[i].setLocation(-2);
+				}
+			}	 		
+		}
+	}
+
+	if(VERB_ACTION == INVENTORY)
+	{
+		for(int i = 0; i < NOUNS; i++)
+		{
+			if(nns[i].getLocation() == STORAGE)
+			{
+				cout << "You have " << nns[i].description << " in your inventory!" << endl;
+			}
+		}	
 	}
 
 	if(VERB_ACTION == OPEN)
@@ -346,6 +482,41 @@ bool parser(int &loc, string wd1, string wd2, vector<words> &dir, vector<words> 
 			return true;
 		}
 	}
+
+	if(VERB_ACTION == CLOSE)
+	{
+		if(NOUN_MATCH == DOOR)
+		{
+			if(loc == D4)
+			{
+				if(door_state == true)
+				{
+					door_state = false;
+					rms[D4].exits_to_room[NORTH] = C3;
+					rms[DOOR].exits_to_room[NORTH] = D4;
+					nns[DOOR]. description.clear();
+					nns[DOOR]. description.assign("a closed flight door");
+					cout << "I have closed the door." << endl;
+					return false;
+				}
+				else if(door_state == false)
+				{
+					cout << "The door is already closed." << endl;
+					return false;
+				}
+				else 
+				{
+					cout << "There is no door to open here." << endl;
+					return false;
+				}
+			}
+		}
+		else
+		{
+			cout << "Closing is not possible" << endl;
+			return false;
+		}
+	}
 	return false;
 }
 
@@ -357,14 +528,16 @@ int main()
 	string command;
 	string word_1;
 	string word_2;
+	
 	if(debug)
 	cout<<"Completed first set";
 
 	vector<room> rooms; 
 	set_rooms(rooms);
 
-	if(debug) {
-		cout << "Just for testing rms[0].desc = " << rooms[0].description << endl;
+	if(debug) 
+	{
+		cout << "Just for testing rms[0].desc = " << rooms[0].getDescription() << endl;
 	}
 	
 	vector<words> directions;
@@ -374,6 +547,7 @@ int main()
 	set_verbs(verbs);
 
 	vector<noun> nouns;
+	vector<noun> inv;
 	set_nouns(nouns);
 
 	int location = L;
@@ -386,10 +560,7 @@ int main()
 		word_1.clear();
 		word_2.clear();
 		section_command(command, word_1, word_2);
-		if(word_1 != "QUIT")
-		{
-			parser(location, word_1, word_2, directions, verbs, rooms, nouns);
-		}
+		parser(location, word_1, word_2, directions, verbs, rooms, nouns);
 	}
 	return 0;
 }
